@@ -1,4 +1,4 @@
-UI_ZHTW = {
+UI_CH = {
     UI_FTI_Title = "Honu 的尋找物品",
     UI_FTI_ScanRadius = "搜尋半徑",
     UI_FTI_ScanRadius_tooltip = "玩家周圍的格子，用來掃描已追蹤的物品。數值越小，效能越佳。",

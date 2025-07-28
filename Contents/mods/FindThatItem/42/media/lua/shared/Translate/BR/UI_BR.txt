@@ -1,4 +1,4 @@
-UI_PTBR = {
+UI_BR = {
     UI_FTI_Title = "Honu: Encontre Aquele Item",
     UI_FTI_ScanRadius = "Raio de varredura",
     UI_FTI_ScanRadius_tooltip = "Blocos ao redor do jogador para escanear por itens rastreados. Quanto menor, melhor o desempenho.",

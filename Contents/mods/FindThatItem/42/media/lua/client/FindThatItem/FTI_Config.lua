@@ -12,8 +12,8 @@ FTI_Config.hudIconSizes = {
 }
 
 -- Default window size
-FTI_Config.height = 500
-FTI_Config.width = 400
+FTI_Config.height = 600
+FTI_Config.width = 700
 
 FTI_Config.rarityColors = {
     -- target  = { r = 1, g = 0.2, b = 0.2 }, -- vivid red
