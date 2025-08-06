@@ -1,6 +1,6 @@
 version=1
 id=3527778645
 title=Honu's Find That Item
-description=Make searching for lost gear in Project Zomboid fast and frustration-free. Instantly scan your surroundings for weapons, bags, tools, and rare loot—even inside containers, and vehicles. Visual indicators, filters, and an intuitive UI help you spot, track, and locate every item you care about. Never lose your stuff again—just search, find, and survive.
+description=Make searching for lost gear in Project Zomboid fast and frustration-free. Instantly scan your surroundings for weapons, bags, tools, and rare lootï¿½even inside containers, and vehicles. Visual indicators, filters, and an intuitive UI help you spot, track, and locate every item you care about. Never lose your stuff againï¿½just search, find, and survive.
 tags=Build 42;QoL;WIP
 visibility=private

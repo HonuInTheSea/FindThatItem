@@ -4,6 +4,7 @@ local FTI_ModOptions = require "FindThatItem/FTI_ModOptions"
 local FTI_Tracker = {}
 
 FTI_Tracker.trackedItems = {} -- each: { item, square, distance }
+FTI_Tracker.junkItems = {}
 FTI_Tracker._lastX = nil
 FTI_Tracker._lastY = nil
 FTI_Tracker._scanCooldown = 0
@@ -235,6 +236,17 @@ function FTI_Tracker.updateOnPlayerMove()
     end
 end
 
+function FTI_Tracker.saveJunkItems()
+    local data = ModData.getOrCreate("FindThatItem")
+    data.junkItems = FTI_Tracker.junkItems
+    ModData.transmit("FindThatItem")
+end
+
+function FTI_Tracker.loadJunkItems()
+    local data = ModData.getOrCreate("FindThatItem")
+    FTI_Tracker.junkItems = data.junkItems or {}
+end
+
 -- function FTI_Tracker.addWantedItem(fullType)
 --     FTI_Tracker.wantedItems[fullType] = true
 --     FTI_Tracker.saveWantedItems()
@@ -261,5 +273,6 @@ end
 -- end
 
 -- Events.OnGameStart.Add(FTI_Tracker.loadWantedItems)
+Events.OnGameStart.Add(FTI_Tracker.loadJunkItems)
 
 return FTI_Tracker

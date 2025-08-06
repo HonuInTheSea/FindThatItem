@@ -14,7 +14,7 @@ FTI_UI.hoveredItem = nil
 FTI_UI.selectedItem = nil
 
 local PADDING = 20
-local ROW_HEIGHT = 40
+local ROW_HEIGHT = 48
 
 FTI_UI.rarityChecks = {
     -- target = true,
@@ -186,7 +186,8 @@ local function filterItemList()
         epic    = 2,
         rare    = 3,
         common  = 4,
-        unknown = 5
+        unknown = 5,
+        junk    = 6
     }
 
     local result = {}
@@ -247,15 +248,17 @@ local function filterItemList()
                 })
             end
         elseif tracked.item then
-            local item                  = tracked.item
-            local name                  = tracked.name
+            local item     = tracked.item
+            local name     = tracked.name
                 or (item.getCustomNameFull and item:getCustomNameFull())
                 or (item.getDisplayName and item:getDisplayName())
                 or ""
-            local fullType              = item.getFullType and item:getFullType()
-            local typeInfo              = fullType and FTI_Config.itemTypes[fullType]
-            local rarity                = (typeInfo and typeInfo.rarity)
+            local fullType = item.getFullType and item:getFullType()
+            local isJunk   = FTI_Tracker.junkItems[fullType] == true
+            local typeInfo = fullType and FTI_Config.itemTypes[fullType]
+            local rarity   = (typeInfo and typeInfo.rarity)
                 or "common"
+            if isJunk then rarity = "junk" end
 
             FTI_UI.rarityCounts[rarity] = (FTI_UI.rarityCounts[rarity] or 0) + 1
 
@@ -474,6 +477,10 @@ function FTI_UI.createUI()
         if not data then return y + self.itemheight end
 
         local name, icon, rarity
+
+        local fullType = data.fullType
+        local isJunk = fullType and FTI_Tracker.junkItems[fullType] == true
+
         if data.item then
             local invItem = data.item
             name = data.displayName or data.name or getText("UI_FTI_UnknownItem")
@@ -509,26 +516,95 @@ function FTI_UI.createUI()
         end
 
         -- Draw icon (if present)
+        local iconY = y + 4
         if icon then
-            self:drawTextureScaled(icon, 4, y + 4, 32, 32, 1)
+            self:drawTextureScaled(icon, 4, iconY, 32, 32, 1)
         end
 
-        -- Draw name
+        -- Draw name (align with icon vertical center)
+        local labelYOffset = 10
         local offsetX = 42
-        self:drawText(name, offsetX, y + 2, color.r, color.g, color.b, 1, UIFont.Small)
+        self:drawText(name, offsetX, y + labelYOffset, color.r, color.g, color.b, 1, UIFont.Small)
+
+        -- Draw toggle button (right side, vertically aligned with icon)
+        if fullType then
+            local btnLabel = isJunk and getText("UI_FTI_Unjunk") or getText("UI_FTI_Junk")
+            local btnLabelW = getTextManager():MeasureStringX(UIFont.Small, btnLabel)
+            local textPadX = 14 -- button left/right padding
+            local btnW = btnLabelW + 2 * textPadX
+            local btnH = 28
+
+            local btnPad = 28
+            local scrollBarW = (self.vscroll and self.vscroll:isVisible() and self.vscroll:getWidth() or 16)
+            local btnX = self:getWidth() - btnW - btnPad - scrollBarW
+
+            local iconH = 32
+            local btnY = iconY + (iconH - btnH) / 2
+
+            local btnColor = isJunk
+                and { r = 0.8, g = 0.5, b = 0.5, a = 1 }
+                or { r = 0.6, g = 0.6, b = 0.6, a = 1 }
+            self:drawRect(btnX, btnY, btnW, btnH, 0.3, btnColor.r, btnColor.g, btnColor.b)
+
+            -- Center label horizontally and vertically in button
+            local btnLabelX = btnX + (btnW - btnLabelW) / 2
+            local btnLabelY = btnY + (btnH - getTextManager():getFontFromEnum(UIFont.Small):getLineHeight()) / 2
+            self:drawText(btnLabel, btnLabelX, btnLabelY, 1, 1, 1, 1, UIFont.Small)
+            -- Register button bounds for mouse click detection
+            if not self._junkButtons then self._junkButtons = {} end
+            self._junkButtons[item.index] = { x = btnX, y = btnY, w = btnW, h = btnH, fullType = fullType }
+        end
+
         return y + self.itemheight
     end
 
     win.list.onMouseMove = function(self, dx, dy)
         local mx, my = self:getMouseX(), self:getMouseY()
         local row = self:rowAt(mx, my)
+        local overButton = false
 
+        -- Check if hovering over any junk button
+        if self._junkButtons then
+            for _, btn in pairs(self._junkButtons) do
+                if mx >= btn.x and mx <= btn.x + btn.w and my >= btn.y and my <= btn.y + btn.h then
+                    overButton = true
+                    break
+                end
+            end
+        end
+
+        -- Always suppress tooltip over button
+        if overButton then
+            FTI_UI.hoveredItem = nil
+            if self.parent and self.parent.tooltip then
+                self.parent.tooltip:removeFromUIManager()
+                self.parent.tooltip = nil
+            end
+            if FTI_RenderVectors then FTI_RenderVectors.requestUpdate = true end
+            FTI_UI.deferRedraw()
+            return
+        end
+
+        -- Default behavior if not over button
         if row then
             local entry = self.items[row]
             FTI_UI.hoveredItem = (entry and entry.item) or (entry and entry.generator) or (entry and entry.vehicle) or
                 nil
         else
             FTI_UI.hoveredItem = nil
+        end
+
+        if FTI_RenderVectors then FTI_RenderVectors.requestUpdate = true end
+        FTI_UI.deferRedraw()
+
+        -- Handle tooltips only if not over button
+        if not row or not self.items[row] or not self.items[row].item then
+            FTI_UI.hoveredItem = nil
+            if self.parent and self.parent.tooltip then
+                self.parent.tooltip:removeFromUIManager()
+                self.parent.tooltip = nil
+            end
+            return
         end
 
         if FTI_RenderVectors then FTI_RenderVectors.requestUpdate = true end
@@ -858,7 +934,31 @@ function FTI_UI.createUI()
         FTI_UI.deferRedraw()
     end
 
+    local origOnMouseDown = win.list.onMouseDown
     win.list.onMouseDown = function(self, x, y)
+        -- Handle junk button clicks first
+        if self._junkButtons then
+            for idx, btn in pairs(self._junkButtons) do
+                if x >= btn.x and x <= btn.x + btn.w and y >= btn.y and y <= btn.y + btn.h then
+                    local fullType = btn.fullType
+                    if fullType then
+                        if FTI_Tracker.junkItems[fullType] then
+                            FTI_Tracker.junkItems[fullType] = nil
+                        else
+                            FTI_Tracker.junkItems[fullType] = true
+                        end
+                        FTI_Tracker.saveJunkItems()
+                        filterItemList()
+                        FTI_UI.refreshLayout()
+                        return
+                    end
+                end
+            end
+        end
+
+        -- Otherwise default
+        if origOnMouseDown then origOnMouseDown(self, x, y) end
+
         local function getAdjacentWalkableSquare(sq, player)
             for dx = -1, 1 do
                 for dy = -1, 1 do

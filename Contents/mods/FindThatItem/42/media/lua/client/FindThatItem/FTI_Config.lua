@@ -17,10 +17,11 @@ FTI_Config.width = 700
 
 FTI_Config.rarityColors = {
     -- target  = { r = 1, g = 0.2, b = 0.2 }, -- vivid red
-    epic    = { r = 1, g = 0.2, b = 1 },   -- magenta
-    rare    = { r = 0.2, g = 0.6, b = 1 }, -- sky blue
-    common  = { r = 0.4, g = 1, b = 0.4 }, -- bright green
-    unknown = { r = 1, g = 1, b = 0 },     -- yellow
+    epic    = { r = 1, g = 0.2, b = 1 },     -- magenta
+    rare    = { r = 0.2, g = 0.6, b = 1 },   -- sky blue
+    common  = { r = 0.4, g = 1, b = 0.4 },   -- bright green
+    unknown = { r = 1, g = 1, b = 0 },       -- yellow
+    junk    = { r = 0.5, g = 0.5, b = 0.5 }, -- gray for junk
 }
 
 FTI_Config.rarityConfig = {
@@ -29,6 +30,7 @@ FTI_Config.rarityConfig = {
     { key = "rare",    label = "UI_FTI_Rarity_RARE" },
     { key = "common",  label = "UI_FTI_Rarity_COMMON" },
     { key = "unknown", label = "UI_FTI_Rarity_UNKNOWN" },
+    { key = "junk",    label = "UI_FTI_Rarity_JUNK" },
 }
 
 FTI_Config.targetedItems = {}
